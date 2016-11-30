@@ -1,0 +1,302 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual machine"
+            }
+        },
+        "adminUserName": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Administrator user name for the virtual machine"
+            }
+        },
+        "adminPassword": {
+            "defaultValue": "Puppet!Puppet",
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the administrator"
+            }
+        },
+        "operatingSystemType": {
+            "allowedValues": [
+                "linux"
+            ],
+            "defaultValue": "linux",
+            "type": "string",
+            "metadata": {
+                "description": "Operating system of the virtual machine"
+            }
+        },
+        "virtualMachineSize": {
+            "defaultValue": "Standard_DS2_v2",
+            "type": "string",
+            "metadata": {
+                "description": "Standard size of the virtual machine"
+            }
+        },
+        "publisher": {
+            "defaultValue": "Canonical",
+            "type": "string",
+            "metadata": {
+                "description": "Publisher of Azure Marketplace VM image"
+            }
+        },
+        "offer": {
+            "defaultValue": "UbuntuServer",
+            "type": "string",
+            "metadata": {
+                "description": "Offer name of Azure Marketplace VM image"
+            }
+        },
+        "sku": {
+            "defaultValue": "16.04.0-LTS",
+            "type": "string",
+            "metadata": {
+                "description": "SKU of Azure Marketplace VM image"
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "myazurestorageaccount",
+            "type": "string",
+            "metadata": {
+                "description": "Storage account name for OS base disk"
+            }
+        },
+        "diskStorageAccountName": {
+            "defaultValue": "myazurestorageaccount",
+            "type": "string",
+            "metadata": {
+                "description": "Storage account name for data disks"
+            }
+        },
+        "datadisk1size": {
+            "defaultValue": 20,
+            "type": "int",
+            "metadata": {
+                "description": "Size of /opt volume in GB"
+            }
+        },
+        "datadisk2size": {
+            "defaultValue": 10,
+            "type": "int",
+            "metadata": {
+                "description": "Size of /var volume in GB"
+            }
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing VNET"
+            }
+        },
+        "virtualNetworkResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing VNET resource group"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet in the virtual network you want to use"
+            }
+        },
+        "customScriptName": {
+            "defaultValue": "ubuntu_puppet.sh",
+            "type": "string",
+            "metadata": {
+                "description": "Custom Script file name (must be in 'custom' container)"
+            }
+        },
+        "customScriptStorageAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "Custom Script storage account name"
+            }
+        },
+        "domain": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS domain name"
+            }
+        },
+        "ubuntu_version": {
+            "defaultValue": "16.04",
+            "type": "string",
+            "metadata": {
+                "description": "ubuntu version"
+            }
+        },
+        "puppet_pe_version": {
+            "defaultValue": "2016.4.2",
+            "type": "string",
+            "metadata": {
+                "description": "puppet_pe_version"
+            }
+        },
+        "puppet_pe_consolepwd": {
+            "defaultValue": "password",
+            "type": "string",
+            "metadata": {
+                "description": "Puppet Console Password"
+            }
+        },
+        "proxy": {
+            "type": "string",
+            "metadata": {
+                "description": "Complete HTTP/HTTPS proxy URL"
+            }
+        },
+        "aliases": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Space-delimited list of DNS Aliases"
+            }
+        },
+        "provider": {
+            "minLength": 1,
+            "type": "string",
+            "metadata": {
+                "description": "Name of the provider"
+            }
+        },
+        "platform": {
+            "defaultValue": "Azure",
+            "minLength": 1,
+            "type": "string",
+            "metadata": {
+                "description": "Name of the platform"
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2015-06-15",
+        "publicIPAddressType": "Dynamic",
+        "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+        "nicName": "[concat(parameters('virtualMachineName'),'-nic')]",
+        "puppetcertname": "[concat(parameters('virtualMachineName'),'.',parameters('domain'))]",
+        "fileUri": "[concat('https://',parameters('customScriptStorageAccount'),'.blob.core.windows.net/custom/',parameters('customScriptName'))]",
+        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('ubuntu_version'),' ',parameters('puppet_pe_version'),' ', parameters('puppet_pe_consolepwd'),' ',parameters('proxy'),' ',parameters('virtualMachineName'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',variables('puppetcertname'),' \"',parameters('aliases'),'\" ',parameters('customscriptStorageAccount'))]",
+        "dataDisk1VhdName": "[concat('https://',parameters('diskStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'dataDisk1.vhd')]",
+        "dataDisk2VhdName": "[concat('https://',parameters('diskStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'dataDisk2.vhd')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicName')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "tags": {
+                "displayName": "NetworkInterface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachineName')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "tags": {
+                "displayName": "VirtualMachine"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachineName')]",
+                    "adminUsername": "[parameters('adminUserName')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('publisher')]",
+                        "offer": "[parameters('offer')]",
+                        "sku": "[parameters('sku')]",
+                        "version": "latest"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "datadisk1",
+                            "diskSizeGB": "[parameters('datadisk1size')]",
+                            "lun": 1,
+                            "vhd": {
+                                "uri": "[variables('dataDisk1VhdName')]"
+                            },
+                            "createOption": "Empty"
+                        },
+                        {
+                            "name": "datadisk2",
+                            "diskSizeGB": "[parameters('datadisk2size')]",
+                            "lun": 2,
+                            "vhd": {
+                                "uri": "[variables('dataDisk2VhdName')]"
+                            },
+                            "createOption": "Empty"
+                        }
+                    ],
+                    "osDisk": {
+                        "name": "[concat(parameters('virtualMachineName'),'-osDisk')]",
+                        "caching": "ReadWrite",
+                        "vhd": {
+                            "uri": "[concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'-osDisk.vhd')]"
+                        },
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('virtualMachineName'),'/', 'CustomScript')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('fileUri')]"
+                    ],
+                    "commandToExecute": "[variables('commandToExecute')]"
+                }
+            }
+        }
+    ]
+}

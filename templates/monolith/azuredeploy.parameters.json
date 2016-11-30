@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "value": "puppet"
+        },
+        "adminUserName": {
+            "value": "puppet"
+        },
+        "adminPassword": {
+            "value": "Puppet!Puppet"
+        },
+        "operatingSystemType": {
+            "value": "linux"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_DS3_v2"
+        },
+        "publisher": {
+            "value": "Canonical"
+        },
+        "offer": {
+            "value": "UbuntuServer"
+        },
+        "sku": {
+            "value": "16.04.0-LTS"
+        },
+        "storageAccountName": {
+            "value": "myazurestorageaccount"
+        },
+        "datadisk1size": {
+            "value": 40
+        },
+        "datadisk2size": {
+            "value": 25
+        },
+        "diskStorageAccountName": {
+            "value": "myazurestorageaccount"
+        },
+        "virtualNetworkName": {
+            "value": "myVirtualNetworkName"
+        },
+        "virtualNetworkResourceGroup": {
+            "value": "myVirtualNetworkResourceGroup"
+        },
+        "subnetName": {
+            "value": "mySubnetName"
+        },
+        "customscriptName": {
+            "value": "ubuntu_puppet.sh"
+        },
+        "customscriptStorageAccount": {
+            "value": "myazurestorageaccount"
+        },
+        "domain": {
+            "value": "mycompany.com"
+        },
+        "ubuntu_version": {
+            "value": "16.04"
+        },
+        "puppet_pe_version": {
+            "value": "2016.4.2"
+        },
+        "puppet_pe_consolepwd": {
+            "value": "password"
+        },
+        "proxy": {
+            "value": "http://proxy.mycompany.com:8080"
+        },
+        "aliases": {
+            "value": "puppet azurepuppet mspuppet"
+        },
+        "provider": {
+            "value": "Azure Resource Manager"
+        },
+        "platform": {
+            "value": "Azure"
+        }
+    }
+}

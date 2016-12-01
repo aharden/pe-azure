@@ -112,6 +112,5 @@ npm config set proxy $PROXY
 npm config set https-proxy $PROXY
 npm install -g azure-cli
 
-# Install updates
-apt update
-apt upgrade -y
+# Remove PE package source after install
+rm /etc/apt/sources.list.d/*

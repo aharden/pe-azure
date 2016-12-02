@@ -1,7 +1,9 @@
 #!/bin/bash
 # Restore databases and files to recovery PE master (assumes monolithic master); run as root
 # Reference: https://docs.puppet.com/pe/latest/migrate_monolithic.html
-# Uninstall PE before starting this procedure: puppet-enterprise-uninstaller -d -p -y
+# Uninstall PE before starting this procedure:
+PUPPET_PE_VERSION=2016.4.2
+/opt/puppet-enterprise-$PUPPET_PE_VERSION/puppet-enterprise-uninstaller -d -p -y
 # Step 1: Back up SSL directory and databases
 # run pe-mono-backup.sh on source PE master (if available) to get current files backed up
 # run through pe-list-backup-files.sh and pe-download-backup-files.sh to restore files to recovery server
@@ -19,7 +21,6 @@ rm -f /etc/puppetlabs/puppet/ssl/public_keys/pe-internal-dashboard.pem
 rm -f /etc/puppetlabs/puppet/ssl/ca/signed/pe-internal-classifier.pem
 rm -f /etc/puppetlabs/puppet/ssl/ca/signed/pe-internal-dashboard.pem
 # Step 3: Install PE 2016.4
-PUPPET_PE_VERSION=2016.4.2
 PE_CERTNAME=<fqdn_of_recovery_server>
 ALIASES="<list of puppet aliases>"
 # create pe.conf file

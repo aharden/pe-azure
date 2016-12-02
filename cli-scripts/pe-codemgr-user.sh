@@ -23,7 +23,7 @@ mkdir /root/.puppetlabs
 curl -k -X POST https://localhost:4433/rbac-api/v1/users \
     --cert $CERT --key $KEY --cacert $CACERT \
     -H "Content-Type: application/json" \
-    -d '{"login":"deployment", "email":"puppet@te.com", "display_name":"Code Manager Service Account", "role_ids": [4], "password":"puppetlabs"}'
+    -d '{"login":"deployment", "email":"puppet@example.com", "display_name":"Code Manager Service Account", "role_ids": [4], "password":"puppetlabs"}'
 
 # Request an authentication token and store in /root/.puppetlabs/token 
 curl -k -X POST https://localhost:4433/rbac-api/v1/auth/token \

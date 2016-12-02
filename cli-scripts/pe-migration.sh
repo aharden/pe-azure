@@ -19,9 +19,9 @@ rm -f /etc/puppetlabs/puppet/ssl/public_keys/pe-internal-dashboard.pem
 rm -f /etc/puppetlabs/puppet/ssl/ca/signed/pe-internal-classifier.pem
 rm -f /etc/puppetlabs/puppet/ssl/ca/signed/pe-internal-dashboard.pem
 # Step 3: Install PE 2016.4
-$PUPPET_PE_VERSION=2016.4.2
-$PE_CERTNAME=<fqdn_of_recovery_server>
-$ALIASES="<list of puppet aliases>"
+PUPPET_PE_VERSION=2016.4.2
+PE_CERTNAME=<fqdn_of_recovery_server>
+ALIASES="<list of puppet aliases>"
 # create pe.conf file
 cat > /opt/pe.conf << CONF
 "console_admin_password": "password"

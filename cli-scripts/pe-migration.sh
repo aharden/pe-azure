@@ -29,8 +29,8 @@ cat > /opt/pe.conf << CONF
 "puppet_enterprise::puppet_master_host": "$PE_CERTNAME"
 "pe_install::puppet_master_dnsaltnames": ["$ALIASES"]
 CONF
-/opt/puppet-enterprise-$PUPPET_PE_VERSION/puppet-enterprise-uninstaller -d -p -y
 /opt/puppet-enterprise-$PUPPET_PE_VERSION/puppet-enterprise-installer -c /opt/pe.conf
+puppet agent -t
 # Step 4: restore PE databases
 RESTORE_DIR=/tmp/restore
 puppet resource service puppet ensure=stopped

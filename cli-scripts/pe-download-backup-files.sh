@@ -24,7 +24,17 @@ export AZURE_STORAGE_ACCESS_KEY=$STORAGE_ACCOUNT_KEY
 if [ ! -d $RESTORE_DIR ]; then
   mkdir -p $RESTORE_DIR
 fi
-# run the following command for each file to be downloaded:
-# azure storage blob download --container $CONTAINER -b <blob_file_name> $RESTORE_DIR
+# download the archived files to restore directory
+SOURCE_DIRS="/etc/puppetlabs /etc/puppetlabs/puppet/ssl /opt/puppetlabs/server/data/console-services/certs /opt/puppetlabs/server/data/postgresql/9.4/data/certs"
+PE_DATABASES="pe-puppetdb pe-classifier pe-rbac pe-activity pe-orchestrator"
+for DIRECTORY in $SOURCE_DIRS
+do
+  ARCHIVE_NAME=`echo ${DIRECTORY} | sed s/^\\\/// | sed s/\\\//_/g`
+  azure storage blob download --container $CONTAINER -b <blob_file_name>.tgz $RESTORE_DIR -q
+done
 # run the following command for each .tgz file to extract to $RESTORE_DIR
 # tar zxvf $RESTORE_DIR/<blob_file_name>.tgz -C $RESTORE_DIR
+for DATABASE in $PE_DATABASES
+do
+  azure storage blob download --container $CONTAINER -b $DATABASE.backup.bin $RESTORE_DIR -q
+done

@@ -50,22 +50,6 @@ proxy=$PROXY
 noproxy=169.254.169.254,localhost,mydomain.com,myotherdomain.com,127.0.0.1
 CURLRC
 
-# these are all the OIDs that we may map or already have
-# https://docs.puppetlabs.com/puppet/latest/reference/ssl_attributes_extensions.html
-
-# create puppet trusted facts
-if [ ! -d /etc/puppetlabs/puppet ]; then
-  mkdir -p /etc/puppetlabs/puppet
-fi
-
-  cat > /etc/puppetlabs/puppet/csr_attributes.yaml << YAML
-extension_requests:
-  1.3.6.1.4.1.34380.1.1.8: 'Puppet Enterprise'
-  1.3.6.1.4.1.34380.1.1.17: $PROVIDER
-  1.3.6.1.4.1.34380.1.1.23: $PLATFORM
-  1.3.6.1.4.1.34380.1.1.25: $SHORT_HOSTNAME
-YAML
-
 # Build file system
 mkfs -t ext4 /dev/sdc
 mkfs -t ext4 /dev/sdd

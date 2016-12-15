@@ -65,6 +65,9 @@
         "puppet_pe_consolepwd": {
             "value": "password"
         },
+        "puppet_pe_codemgrpwd": {
+            "value": "puppetlabs"
+        },
         "proxy": {
             "value": "http://proxy.mycompany.com:8080"
         },

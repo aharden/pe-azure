@@ -120,6 +120,12 @@
                 "description": "Custom Script storage account name"
             }
         },
+        "diagnosticsStorageAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "Diagnostics storage account name"
+            }
+        },
         "domain": {
             "type": "string",
             "metadata": {
@@ -145,6 +151,13 @@
             "type": "string",
             "metadata": {
                 "description": "Puppet Console Password"
+            }
+        },
+        "puppet_pe_codemgrpwd": {
+            "defaultValue": "password",
+            "type": "securestring",
+            "metadata": {
+                "description": "Code Manager Deployment User Password"
             }
         },
         "proxy": {
@@ -185,7 +198,7 @@
         "nicName": "[concat(parameters('virtualMachineName'),'-nic')]",
         "puppetcertname": "[concat(parameters('virtualMachineName'),'.',parameters('domain'))]",
         "fileUri": "[concat('https://',parameters('customScriptStorageAccount'),'.blob.core.windows.net/custom/',parameters('customScriptName'))]",
-        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('ubuntu_version'),' ',parameters('puppet_pe_version'),' ', parameters('puppet_pe_consolepwd'),' ',parameters('proxy'),' ',parameters('virtualMachineName'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',variables('puppetcertname'),' \"',parameters('aliases'),'\" ',parameters('customscriptStorageAccount'))]",
+        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('ubuntu_version'),' ',parameters('puppet_pe_version'),' ', parameters('puppet_pe_consolepwd'),' ',parameters('proxy'),' ',parameters('virtualMachineName'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',variables('puppetcertname'),' \"',parameters('aliases'),'\" ',parameters('customscriptStorageAccount')' ',parameters('puppet_pe_codemgrpwd'))]",
         "dataDisk1VhdName": "[concat('https://',parameters('diskStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'dataDisk1.vhd')]",
         "dataDisk2VhdName": "[concat('https://',parameters('diskStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'dataDisk2.vhd')]"
     },
@@ -271,6 +284,12 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
                         }
                     ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": "true",
+                        "storageUri": "[concat('http://',parameters('diagnosticsStorageAccount'),'.blob.core.windows.net')]"
+                      }
                 }
             },
             "dependsOn": [
@@ -298,5 +317,15 @@
                 }
             }
         }
-    ]
+    ],
+    "outputs": {
+        "ipAddress": {
+            "value": "[reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress]",
+            "type": "string"
+        },
+        "PEConsoleURL": {
+            "value": "[concat('https://',parameters('virtualMachineName'),'.',parameters('domain'))]",
+            "type": "string"
+        }
+    }
 }

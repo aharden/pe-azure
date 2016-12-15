@@ -29,10 +29,12 @@ PuppetDB, PE Console, and PE Master roles.
 |subnetName                  | String       | none (provide existing subnet from the virtual network) |
 |customscriptName            | String       | ubuntu_puppet.sh |
 |customscriptStorageAccount  | String       | none (provide storage account for custom script container) |
+|diagnosticsStorageAccount   | String       | none (provide storage account for diagnostics data) |
 |domain                      | String       | none (provide DNS domain name for server) |
 |ubuntu_version              | String       | 16.04 |
 |puppet_pe_version           | String       | 2016.4.2 |
 |puppet_pe_consolepwd        | String       | password |
+|puppet_pe_codemgrpwd        | String       | puppetlabs |
 |proxy                       | String       | none (ex: http://myproxy.mycompany.com:8080) |
 |aliases                     | String       | puppet |
 |provider                    | String       | none (provide name of service provider for trusted facts) |

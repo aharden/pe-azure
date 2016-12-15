@@ -10,6 +10,7 @@ DOMAIN=$8
 PE_CERTNAME=$9
 ALIASES=${10}
 STORAGE_ACCT=${11}
+PUPPET_PE_CODEMGRPWD=${12}
 
 # Reference: http://unix.stackexchange.com/questions/119269/how-to-get-ip-address-using-shell-script
 IP_ADDRESS=$(ifconfig eth0 | awk '/inet addr/{print substr($2,6)}')
@@ -17,10 +18,10 @@ IP_ADDRESS=$(ifconfig eth0 | awk '/inet addr/{print substr($2,6)}')
 REVERSE_IP=$(echo $IP_ADDRESS|awk -F"." '{for(i=NF;i>0;i--) printf i!=1?$i".":"%s",$i}')
 
 # create txt file with script parameters
-echo "$UBUNTU_VERSION $PUPPET_PE_VERSION $PUPPET_PE_CONSOLEPWD $PROXY $SHORT_HOSTNAME $PROVIDER $PLATFORM $DOMAIN $PE_CERTNAME $ALIASES $STORAGE_ACCT" >> /etc/customscr.txt
+echo "$UBUNTU_VERSION $PUPPET_PE_VERSION $PUPPET_PE_CONSOLEPWD $PROXY $SHORT_HOSTNAME $PROVIDER $PLATFORM $DOMAIN $PE_CERTNAME $ALIASES $STORAGE_ACCT $PUPPET_PE_CODEMGRPWD" >> /etc/customscr.txt
 
 # set hosts file
-echo "127.0.0.1 localhost $SHORT_HOSTNAME $ALIASES" >/etc/hosts
+echo "127.0.0.1 $PE_CERTNAME $SHORT_HOSTNAME localhost $ALIASES" >/etc/hosts
 
 # Set DNS
 echo "
@@ -50,22 +51,6 @@ proxy=$PROXY
 noproxy=169.254.169.254,localhost,mydomain.com,myotherdomain.com,127.0.0.1
 CURLRC
 
-# these are all the OIDs that we may map or already have
-# https://docs.puppetlabs.com/puppet/latest/reference/ssl_attributes_extensions.html
-
-# create puppet trusted facts
-if [ ! -d /etc/puppetlabs/puppet ]; then
-  mkdir -p /etc/puppetlabs/puppet
-fi
-
-  cat > /etc/puppetlabs/puppet/csr_attributes.yaml << YAML
-extension_requests:
-  1.3.6.1.4.1.34380.1.1.8: 'Puppet Enterprise'
-  1.3.6.1.4.1.34380.1.1.17: $PROVIDER
-  1.3.6.1.4.1.34380.1.1.23: $PLATFORM
-  1.3.6.1.4.1.34380.1.1.25: $SHORT_HOSTNAME
-YAML
-
 # Build file system
 mkfs -t ext4 /dev/sdc
 mkfs -t ext4 /dev/sdd
@@ -89,11 +74,14 @@ mount /dev/sdd /var
 echo "/dev/sdc /opt ext4 noatime 0 0" >> /etc/fstab
 echo "/dev/sdd /var ext4 noatime 0 0" >> /etc/fstab
 
-# create pe.conf file
+# create pe.conf file - uncomment/customize Code Manager settings if required
 cat > /opt/pe.conf << CONF
 "console_admin_password": "$PUPPET_PE_CONSOLEPWD"
 "puppet_enterprise::puppet_master_host": "$PE_CERTNAME"
 "pe_install::puppet_master_dnsaltnames": ["puppet"]
+#"puppet_enterprise::profile::master::r10k_remote": "<control repo git clone URL>"
+#"puppet_enterprise::profile::master::r10k_private_key": "/etc/puppetlabs/puppetserver/ssh/id-control_repo.rsa"
+#"puppet_enterprise::profile::master::code_manager_auto_configure": true
 CONF
 
 # download PE install sources
@@ -106,11 +94,41 @@ echo "*" > /etc/puppetlabs/puppet/autosign.conf
 
 /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize --color=false --verbose
 
+# Remove PE package source after install
+rm /etc/apt/sources.list.d/*
+
 # Install Azure CLI
-apt install npm nodejs-legacy -y
+/opt/puppetlabs/bin/puppet resource package npm ensure=installed
+/opt/puppetlabs/bin/puppet resource package nodejs-legacy ensure=installed
 npm config set proxy $PROXY
 npm config set https-proxy $PROXY
 npm install -g azure-cli
 
-# Remove PE package source after install
-rm /etc/apt/sources.list.d/*
+# Set up Code Manager deployment user on PE 2016.4
+# https://docs.puppet.com/pe/latest/code_mgr_config.html#set-up-authentication-for-code-manager
+CERT="$(puppet agent --configprint hostcert)"
+KEY="$(puppet agent --configprint hostprivkey)"
+CACERT="$(puppet agent --configprint localcacert)"
+SERVER="$(puppet agent --configprint server)"
+alias curl='/opt/puppetlabs/puppet/bin/curl'
+
+# Install jq
+/opt/puppetlabs/bin/puppet resource package jq ensure=installed
+
+# Make a root .puppetlabs directory for Code Manager deployment user token
+mkdir /root/.puppetlabs
+
+# Create deployment user
+curl -k -X POST https://localhost:4433/rbac-api/v1/users \
+    --cert $CERT --key $KEY --cacert $CACERT \
+    -H "Content-Type: application/json" \
+    -d '{"login":"deployment", "email":"puppet@te.com", "display_name":"Code Manager Service Account", "role_ids": [4], "password":"$PUPPET_PE_CODEMGRPWD"}'
+
+# Request an authentication token and store in /root/.puppetlabs/token
+curl -k -X POST https://localhost:4433/rbac-api/v1/auth/token \
+    --cert $CERT --key $KEY --cacert $CACERT \
+    -H "Content-Type: application/json" \
+    -d '{"login":"deployment", "password":"$PUPPET_PE_CODEMGRPWD", "lifetime":"10y", "label":"PE Master token"}' | \
+    jq -r '.token' > /root/.puppetlabs/token
+
+# Before first code deployment, create and place /etc/puppetlabs/puppetserver/ssh/id-control_repo.rsa

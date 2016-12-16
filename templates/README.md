@@ -34,6 +34,7 @@ PuppetDB, PE Console, and PE Master roles.
 |ubuntu_version              | String       | 16.04 |
 |puppet_pe_version           | String       | 2016.4.2 |
 |puppet_pe_consolepwd        | String       | password |
+|puppet_pe_codemgrpwd        | String       | puppetlabs |
 |proxy                       | String       | none (ex: http://myproxy.mycompany.com:8080) |
 |aliases                     | String       | puppet |
 |provider                    | String       | none (provide name of service provider for trusted facts) |

@@ -1,0 +1,382 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Base name of the virtual machine"
+            }
+        },
+        "vmCount": {
+            "defaultValue": 3,
+            "type": "int",
+            "metadata": {
+                "description": "Number of VMs to create"
+            }
+        },
+        "puppetServerIP": {
+            "type": "string",
+            "metadata": {
+                "description": "IP address of PE Master of desired PE deployment"
+            }
+        },
+        "loadBalancerIP": {
+          "type": "string",
+          "metadata": {
+              "description": "IP address of PE compile master load balancer"
+          }
+        },
+        "adminUserName": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Administrator user name for the virtual machines"
+            }
+        },
+        "adminPassword": {
+            "defaultValue": "Puppet!Puppet",
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the administrator"
+            }
+        },
+        "operatingSystemType": {
+            "allowedValues": [
+                "linux"
+            ],
+            "defaultValue": "linux",
+            "type": "string",
+            "metadata": {
+                "description": "Operating system of the virtual machines"
+            }
+        },
+        "virtualMachineSize": {
+            "defaultValue": "Standard_DS2_v2",
+            "type": "string",
+            "metadata": {
+                "description": "Standard size of the virtual machines"
+            }
+        },
+        "publisher": {
+            "defaultValue": "Canonical",
+            "type": "string",
+            "metadata": {
+                "description": "Publisher of Azure Marketplace VM image"
+            }
+        },
+        "offer": {
+            "defaultValue": "UbuntuServer",
+            "type": "string",
+            "metadata": {
+                "description": "Offer name of Azure Marketplace VM image"
+            }
+        },
+        "sku": {
+            "defaultValue": "16.04.0-LTS",
+            "type": "string",
+            "metadata": {
+                "description": "SKU of Azure Marketplace VM image"
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "myazurestorageaccount",
+            "type": "string",
+            "metadata": {
+                "description": "Storage account name for OS base disk"
+            }
+        },
+        "diskStorageAccountName": {
+            "defaultValue": "myazurestorageaccount",
+            "type": "string",
+            "metadata": {
+                "description": "Storage account name for data disks"
+            }
+        },
+        "datadisk1size": {
+            "defaultValue": 20,
+            "type": "int",
+            "metadata": {
+                "description": "Size of /opt volume in GB"
+            }
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing VNET"
+            }
+        },
+        "virtualNetworkResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing VNET resource group"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet in the virtual network you want to use"
+            }
+        },
+        "customScriptName": {
+            "defaultValue": "ubuntu_compile.sh",
+            "type": "string",
+            "metadata": {
+                "description": "Custom Script file name (must be in 'custom' container)"
+            }
+        },
+        "customScriptStorageAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "Custom Script storage account name"
+            }
+        },
+        "diagnosticsStorageAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "Diagnostics storage account name"
+            }
+        },
+        "domain": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS domain name"
+            }
+        },
+        "proxy": {
+            "type": "string",
+            "metadata": {
+                "description": "Complete HTTP/HTTPS proxy URL"
+            }
+        },
+        "aliases": {
+            "defaultValue": "puppet",
+            "type": "string",
+            "metadata": {
+                "description": "Comma-delimited list of DNS Aliases for PE deployment"
+            }
+        },
+        "provider": {
+            "minLength": 1,
+            "type": "string",
+            "metadata": {
+                "description": "Name of the provider"
+            }
+        },
+        "platform": {
+            "defaultValue": "Azure",
+            "minLength": 1,
+            "type": "string",
+            "metadata": {
+                "description": "Name of the platform"
+            }
+        }
+    },
+    "variables": {
+        "availabilitySetName": "[concat('puppet-',parameters('virtualMachineName'))]",
+        "loadBalancerName": "[concat('puppet-lb-',parameters('virtualMachineName'))]",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2015-06-15",
+        "publicIPAddressType": "Dynamic",
+        "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+        "nicName": "[concat(parameters('virtualMachineName'),'-nic')]",
+        "fileUri": "[concat('https://',parameters('customScriptStorageAccount'),'.blob.core.windows.net/custom/',parameters('customScriptName'))]",
+        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('puppetServerIP'),' ',parameters('proxy'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',' \"',parameters('aliases'),'\" ', parameters('customscriptStorageAccount'),' ', parameters('centrifyZone'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "apiVersion": "[variables('apiVersion')]",
+            "name": "[variables('availabilitySetName')]",
+            "location": "[variables('location')]"
+        },
+        {
+          "type": "Microsoft.Network/loadBalancers",
+          "apiVersion": "[variables('apiVersion')]",
+          "name": "[variables('loadBalancerName')]",
+          "location": "[variables('location')]",
+          "properties": {
+            "frontendIPConfigurations": [
+              {
+                "properties": {
+                  "subnet": {
+                    "id": "[variables('subnetRef')]"
+                  },
+                  "privateIPAddress": "[parameters('loadBalancerIP')]",
+                  "privateIPAllocationMethod": "Static"
+                },
+                "name": "LoadBalancerFrontend"
+              }
+            ],
+            "backendAddressPools": [
+              {
+                "name": "BackendPool1"
+              }
+            ],
+            "loadBalancingRules": [
+              {
+                "properties": {
+                  "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/frontendIpConfigurations/LoadBalancerFrontend')]"
+                  },
+                  "backendAddressPool": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/backendAddressPools/BackendPool1')]"
+                  },
+                  "probe": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/probes/lbprobe')]"
+                  },
+                  "protocol": "Tcp",
+                  "frontendPort": 8140,
+                  "backendPort": 8140,
+                  "idleTimeoutInMinutes": 15
+                },
+                "Name": "puppet"
+              }
+            ],
+            "probes": [
+              {
+                "properties": {
+                  "protocol": "Tcp",
+                  "port": 8140,
+                  "intervalInSeconds": 15,
+                  "numberOfProbes": 2
+                },
+                "name": "lbprobe"
+              }
+            ]
+          }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "copy": {
+              "name": "niccopy",
+              "count": "[parameters('vmCount')]"
+            },
+            "name": "[concat(variables('nicName'),'-',copyIndex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "tags": {
+                "displayName": "NetworkInterface"
+            },
+            "dependsOn": [
+              "[concat('Microsoft.Network/loadBalancers/', variables('loadBalancerName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                              {
+                                "id": "[concat(variables('lbID'), '/backendAddressPools/BackendPool1')]"
+                              }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "copy": {
+              "name": "vmcopy",
+              "count": "[parameters('vmCount')]"
+            },
+            "name": "[concat(parameters('virtualMachineName'),'-',copyIndex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "tags": {
+                "displayName": "VirtualMachine"
+            },
+            "properties": {
+                "availabilitySet": {
+                  "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('availabilitySetName'))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('virtualMachineName'),'-',copyIndex(1))]",
+                    "adminUsername": "[parameters('adminUserName')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('publisher')]",
+                        "offer": "[parameters('offer')]",
+                        "sku": "[parameters('sku')]",
+                        "version": "latest"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "dataDisk1",
+                            "diskSizeGB": "[parameters('datadisk1size')]",
+                            "lun": "[int(copyIndex(1))]",
+                            "vhd": {
+                                "uri": "[concat('https://',parameters('diskStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),'-',copyIndex(1),'-dataDisk1.vhd')]"
+                            },
+                            "createOption": "Empty"
+                        }
+                    ],
+                    "osDisk": {
+                        "name": "[concat(parameters('virtualMachineName'),'-',copyIndex(1),'-osDisk')]",
+                        "caching": "ReadWrite",
+                        "vhd": {
+                            "uri": "[concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',parameters('virtualMachineName'),copyIndex(1),'-osDisk.vhd')]"
+                        },
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',copyIndex(1)))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": "true",
+                        "storageUri": "[concat('http://',parameters('diagnosticsStorageAccount'),'.blob.core.windows.net')]"
+                      }
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-',copyIndex(1))]",
+                "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "copy": {
+              "name": "customscriptcopy",
+              "count": "[parameters('vmCount')]"
+            },
+            "name": "[concat(parameters('virtualMachineName'),'-',copyIndex(1),'/', 'CustomScript')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'),'-',copyIndex(1))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('fileUri')]"
+                    ],
+                    "commandToExecute": "[variables('commandToExecute')]"
+                }
+            }
+        }
+    ]
+}

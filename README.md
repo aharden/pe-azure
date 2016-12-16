@@ -14,5 +14,14 @@ Resource Manager templates to work.
 
 ## `templates`
 
-Azure Resource Manager template that deploys a PE monolithic master to an Azure
-VPC.
+Azure Resource Manager templates deploying Ubuntu Linux Server VMs with Puppet
+Enterprise
+
+### `monolith`
+
+Deploys a PE monolithic master to an established Azure VPC.
+
+### `compile_master`
+
+Deploys a group of PE compile masters along with a load balancer that can be
+attached to an existing PE monolithic master to scale a deployment.

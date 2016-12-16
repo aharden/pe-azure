@@ -14,6 +14,12 @@ This container holds the custom scripts used by the PE templates.
 Prepares an Ubuntu 16.04 LTS server with two data disks to run Puppet
 Enterprise.  Used by the `monolith` template.
 
+### `ubuntu_compile.sh`
+
+Prepares an Ubuntu 16.04 LTS server with one data disk to join a Puppet
+Enterprise deployment as a compile master.  Used by the `compile_master`
+template.
+
 ## puppet
 
 This container holds the Puppet Enterprise tarballs for Ubuntu 16.04 LTS that

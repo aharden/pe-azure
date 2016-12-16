@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "value": "puppetcompile"
+        },
+       "vmCount": {
+            "value": 3
+        },
+       "puppetServerIP": {
+            "value": ""
+        },
+        "loadBalancerIP": {
+            "value": ""
+        },
+        "adminUserName": {
+            "value": "puppet"
+        },
+        "adminPassword": {
+            "value": "Puppet!Puppet"
+        },
+        "operatingSystemType": {
+            "value": "linux"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_DS2_v2"
+        },
+        "publisher": {
+            "value": "Canonical"
+        },
+        "offer": {
+            "value": "UbuntuServer"
+        },
+        "sku": {
+            "value": "16.04.0-LTS"
+        },
+        "storageAccountName": {
+            "value": "myazurestorageaccount"
+        },
+        "datadisk1size": {
+            "value": 30
+        },
+        "diskStorageAccountName": {
+            "value": "myazurestorageaccount"
+        },
+        "virtualNetworkName": {
+            "value": "myVirtualNetworkName"
+        },
+        "virtualNetworkResourceGroup": {
+            "value": "myVirtualNetworkResourceGroup"
+        },
+        "subnetName": {
+            "value": "mySubnetName"
+        },
+        "customscriptName": {
+            "value": "ubuntu_compile.sh"
+        },
+        "customscriptStorageAccount": {
+            "value": "myazurestorageaccount"
+        },
+        "diagnosticsStorageAccount": {
+            "value": "myazurestorageaccount"
+        },
+        "domain": {
+            "value": "mycompany.com"
+        },
+        "proxy": {
+            "value": "http://proxy.mycompany.com:8080"
+        },
+        "aliases": {
+            "value": "puppet"
+        },
+        "provider": {
+            "value": "Azure"
+        },
+        "platform": {
+            "value": "Azure"
+        }
+    }
+}

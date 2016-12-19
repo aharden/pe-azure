@@ -6,7 +6,6 @@ PLATFORM=$4
 DOMAIN=$5
 ALIASES=$6
 STORAGE_ACCT=$7
-CENTRIFY_ZONE=$8
 SHORT_HOSTNAME=$(hostname)
 PE_CERTNAME=$SHORT_HOSTNAME.$DOMAIN
 
@@ -16,7 +15,7 @@ IP_ADDRESS=$(ifconfig eth0 | awk '/inet addr/{print substr($2,6)}')
 REVERSE_IP=$(echo $IP_ADDRESS|awk -F"." '{for(i=NF;i>0;i--) printf i!=1?$i".":"%s",$i}')
 
 # create txt file with script parameters
-echo "$PUPPET_MASTER $PROXY $PROVIDER $PLATFORM $DOMAIN $ALIASES $STORAGE_ACCT $CENTRIFY_ZONE" >> /etc/customscr.txt
+echo "$PUPPET_MASTER $PROXY $PROVIDER $PLATFORM $DOMAIN $ALIASES $STORAGE_ACCT" >> /etc/customscr.txt
 
 # set hosts file
 echo "127.0.0.1 $PE_CERTNAME $SHORT_HOSTNAME localhost" >/etc/hosts
@@ -34,15 +33,13 @@ send" | nsupdate
 
 # inject domain search settings for current run
 cat > /run/resolvconf/interface/eth0.inet << ETHCONF
-search $DOMAIN tycoelectronics.net tycoelectronics.com ohs.tycoelectronics.com us.tycoelectronics.com
-nameserver 135.107.26.202
-nameserver 135.107.90.202
+search $DOMAIN mydomain.com myotherdomain.com
 ETHCONF
 # generate new /etc/resolv.conf
 /sbin/resolvconf -u
 # inject domain search settings into permanent config
 cat >> /etc/network/interfaces.d/50-cloud-init.cfg << CFG
-    dns-search $DOMAIN tycoelectronics.net tycoelectronics.com ohs.tycoelectronics.com us.tycoelectronics.com
+    dns-search $DOMAIN mydomain.com myotherdomain.com
 CFG
 
 # these are all the OIDs that we may map or already have
@@ -89,8 +86,8 @@ FACT
 # Use PE Node Classifier to join server to PE Master node group
 # Run Agent again to pick up PE Master configuration: /opt/puppetlabs/bin/puppet agent -t
 
-# inject TE HTTP proxy
+# inject HTTP proxy
 cat > /root/.curlrc << CURLRC
 proxy=$PROXY
-noproxy=169.254.169.254,localhost,tycoelectronics.com,tycoelectronics.net,127.0.0.1
+noproxy=169.254.169.254,localhost,mydomain.com,myotherdomain.com,127.0.0.1
 CURLRC

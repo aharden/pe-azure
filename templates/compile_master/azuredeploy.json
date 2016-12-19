@@ -184,7 +184,7 @@
         "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
         "nicName": "[concat(parameters('virtualMachineName'),'-nic')]",
         "fileUri": "[concat('https://',parameters('customScriptStorageAccount'),'.blob.core.windows.net/custom/',parameters('customScriptName'))]",
-        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('puppetServerIP'),' ',parameters('proxy'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',' \"',parameters('aliases'),'\" ', parameters('customscriptStorageAccount'),' ', parameters('centrifyZone'))]"
+        "commandToExecute": "[concat('sh',' ',parameters('customScriptName'),' ',parameters('puppetServerIP'),' ',parameters('proxy'),' ',parameters('provider'),' ',parameters('platform'),' ',parameters('domain'),' ',' \"',parameters('aliases'),'\" ', parameters('customscriptStorageAccount'))]"
     },
     "resources": [
         {

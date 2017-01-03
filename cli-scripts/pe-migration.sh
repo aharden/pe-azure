@@ -45,7 +45,7 @@ sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-pu
 sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-classifier.backup.bin -d template1
 sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-activity.backup.bin -d template1
 sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-rbac.backup.bin -d template1
-sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-orchestration.backup.bin -d template1
+sudo -u pe-postgres /opt/puppetlabs/server/bin/pg_restore -Cc $RESTORE_DIR/pe-orchestrator.backup.bin -d template1
 #Start PE services
 #Install database extensions and repair database permissions
 #Repair PE classification groups to reflect the 2016.4.x Puppet master’s certificate name.
